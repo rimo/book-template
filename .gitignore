@@ -1,0 +1,32 @@
+# ビルド成果物
+book/
+dist/html/
+target/
+*.epub
+*.mobi
+
+# Obsidian
+.obsidian/workspace*
+.obsidian/cache/
+.obsidian/*.json.bak
+.trash/
+
+# 個人的なメモ(必要に応じてコメントアウト解除)
+# obsidian/drafts/private/
+
+# macOS
+.DS_Store
+
+# エディタ
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# ログファイル
+*.log
+
+# 一時ファイル
+tmp/
+temp/

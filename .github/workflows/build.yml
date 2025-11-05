@@ -1,0 +1,73 @@
+name: Build and Deploy Book
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 手動実行を許可
+
+jobs:
+  build-mdbook:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Install mdBook
+      run: |
+        cargo install mdbook
+
+    - name: Sync Obsidian to mdBook
+      run: |
+        chmod +x scripts/sync-to-mdbook.sh
+        bash scripts/sync-to-mdbook.sh
+
+    - name: Build mdBook
+      run: mdbook build
+
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist/html
+        # cname: your-book-domain.com  # カスタムドメインがあれば
+
+  build-kindle:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Pandoc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+
+    - name: Build EPUB
+      run: |
+        chmod +x scripts/build-kindle.sh
+        bash scripts/build-kindle.sh
+
+    - name: Upload EPUB Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: kindle-book
+        path: dist/book.epub
+        retention-days: 30
+
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/book.epub
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

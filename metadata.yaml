@@ -1,0 +1,15 @@
+---
+title: "あなたの本のタイトル"
+subtitle: "サブタイトル(オプション)"
+author:
+  - "著者名"
+publisher: "出版社名(セルフパブリッシングの場合は著者名)"
+language: ja
+rights: "© 2025 著者名. All rights reserved."
+description: |
+  本の説明文をここに記載します。
+  複数行にわたって書くこともできます。
+keywords: [キーワード1, キーワード2, キーワード3]
+cover-image: cover.jpg
+stylesheet: styles/epub.css
+---

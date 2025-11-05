@@ -1,0 +1,22 @@
+{
+  "legacyEditor": false,
+  "livePreview": true,
+  "strictLineBreaks": false,
+  "showFrontmatter": true,
+  "promptDelete": true,
+  "foldHeading": true,
+  "foldIndent": true,
+  "showLineNumber": false,
+  "spellcheck": true,
+  "spellcheckLanguages": [
+    "ja",
+    "en-US"
+  ],
+  "useMarkdownLinks": false,
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "attachments",
+  "newFileLocation": "current",
+  "newLinkFormat": "shortest",
+  "defaultViewMode": "source",
+  "readableLineLength": true
+}
