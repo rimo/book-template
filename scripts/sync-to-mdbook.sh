@@ -27,6 +27,25 @@ rsync -av --delete \
   obsidian/published/ \
   src/
 
+# YAMLフロントマターを除去
+echo "YAMLフロントマターを除去中..."
+for file in src/[0-9][0-9]-*.md; do
+  if [ -f "$file" ]; then
+    # YAMLフロントマター(最初の---から次の---まで)を削除
+    awk '
+      BEGIN { in_frontmatter=0; past_frontmatter=0 }
+      /^---$/ {
+        if (!past_frontmatter) {
+          in_frontmatter = !in_frontmatter
+          if (!in_frontmatter) past_frontmatter=1
+          next
+        }
+      }
+      !in_frontmatter { print }
+    ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+  fi
+done
+
 # SUMMARY.mdの自動生成
 echo "SUMMARY.md を生成中..."
 
