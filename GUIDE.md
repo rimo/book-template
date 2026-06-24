@@ -249,7 +249,7 @@ author:
   - "著者名"
 publisher: "出版社名（セルフパブリッシングの場合は著者名）"
 language: ja
-rights: "© 2025 著者名. All rights reserved."
+rights: "© 2026 著者名. All rights reserved."
 description: |
   本の説明文をここに記載します。
   複数行にわたって書くこともできます。
@@ -1116,49 +1116,71 @@ name: Build and Deploy Book
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:  # 手動実行を許可
 
+# GitHub Pages へのデプロイに必要な権限(最小権限の原則)
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: false
+
+env:
+  MDBOOK_VERSION: "0.5.3"  # mdBook のバージョンを固定(再現性のため)
+
 jobs:
   build-mdbook:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
+      uses: actions/checkout@v5
 
     - name: Install mdBook
-      run: |
-        cargo install mdbook
+      uses: taiki-e/install-action@v2  # プリビルドバイナリを取得(高速)
+      with:
+        tool: mdbook@${{ env.MDBOOK_VERSION }}
 
     - name: Sync Obsidian to mdBook
-      run: |
-        chmod +x scripts/sync-to-mdbook.sh
-        bash scripts/sync-to-mdbook.sh
+      run: bash scripts/sync-to-mdbook.sh
 
     - name: Build mdBook
       run: mdbook build
 
-    - name: Deploy to GitHub Pages
+    - name: Setup Pages
       if: github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v3
+      uses: actions/configure-pages@v5
+
+    - name: Upload Pages artifact
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist/html
-        cname: your-book-domain.com  # カスタムドメインがあれば
+        path: ./dist/html
+
+  deploy-pages:
+    needs: build-mdbook
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
 
   build-kindle:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write  # タグ push 時に Release を作成するために必要
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
 
     - name: Install Pandoc
       run: |
@@ -1166,12 +1188,10 @@ jobs:
         sudo apt-get install -y pandoc
 
     - name: Build EPUB
-      run: |
-        chmod +x scripts/build-kindle.sh
-        bash scripts/build-kindle.sh
+      run: bash scripts/build-kindle.sh
 
     - name: Upload EPUB Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: kindle-book
         path: dist/book.epub
@@ -1179,12 +1199,12 @@ jobs:
 
     - name: Create Release (on tag)
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: dist/book.epub
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+> **補足(旧バージョンからの変更点)**: `actions/upload-artifact@v3` は2025年1月に廃止されてビルドが失敗するため `@v4` へ更新。GitHub Pages へのデプロイは非公式の `peaceiris/actions-gh-pages` から公式の `configure-pages` / `upload-pages-artifact` / `deploy-pages` 方式へ移行。`actions-rs/toolchain`(アーカイブ済み)は廃止し、mdBook はプリビルドバイナリを取得する `taiki-e/install-action` でインストールします。カスタムドメインを使う場合は、リポジトリの Settings → Pages から設定してください。
 
 ### 6.2 GitHub Pagesの設定
 
@@ -1419,7 +1439,7 @@ pandoc -o dist/book.pdf \
 
 ---
 
-**バージョン**: 1.0
-**最終更新**: 2025-11-05
+**バージョン**: 1.1
+**最終更新**: 2026-06-24
 **作成者**: Claude
 **ライセンス**: このガイドは自由に使用・改変できます
