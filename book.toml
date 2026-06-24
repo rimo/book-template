@@ -2,7 +2,6 @@
 title = "あなたの本のタイトル"
 authors = ["著者名"]
 language = "ja"
-multilingual = false
 src = "src"
 
 [build]
